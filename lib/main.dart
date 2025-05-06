@@ -1,3 +1,4 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,25 +15,20 @@ import 'package:doctor_finder_flutter/services/firebase_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase and Firebase services here
+  // Initialize Firebase first
   try {
+    print('Starting Firebase initialization...');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    print('Firebase initialized successfully');
 
     // Initialize Firebase services immediately after Firebase.initializeApp()
     await FirebaseService.initialize();
-
-    print('Firebase and services initialized successfully');
+    print('Firebase services initialized successfully');
   } catch (e) {
     print('Firebase initialization error: $e');
-
-    // For desktop platforms, continue anyway
-    if (defaultTargetPlatform == TargetPlatform.linux ||
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.windows) {
-      print('Continuing without Firebase on desktop platform');
-    }
+    print('Continuing without Firebase on desktop platform');
   }
 
   runApp(const MyApp());

@@ -1,3 +1,4 @@
+// lib/providers/doctor_provider.dart
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:doctor_finder_flutter/models/doctor_model.dart';
@@ -5,6 +6,7 @@ import 'package:doctor_finder_flutter/models/specialty_model.dart';
 import 'package:doctor_finder_flutter/services/firestore_service.dart';
 import 'package:doctor_finder_flutter/services/firebase_service.dart';
 import 'package:doctor_finder_flutter/services/location_service.dart';
+import 'package:doctor_finder_flutter/services/offline_service.dart';
 import 'package:doctor_finder_flutter/core/utils/distance_calculator.dart';
 
 class DoctorProvider extends ChangeNotifier {
@@ -15,7 +17,8 @@ class DoctorProvider extends ChangeNotifier {
   String _searchQuery = '';
   bool _isLoading = false;
   Position? _userLocation;
-  bool _isLocationMode = true; // true for nearby, false for country-wide
+  bool _isLocationMode = true;
+  bool _isOfflineMode = false;
 
   List<DoctorModel> get doctors => _filteredDoctors;
   List<SpecialtyModel> get specialties => _specialties;
@@ -23,6 +26,7 @@ class DoctorProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   bool get isLoading => _isLoading;
   bool get isLocationMode => _isLocationMode;
+  bool get isOfflineMode => _isOfflineMode;
 
   DoctorProvider() {
     _initialize();
@@ -31,13 +35,28 @@ class DoctorProvider extends ChangeNotifier {
   void _initialize() {
     _setLoading(true);
 
-    // Only fetch data if Firebase is initialized
-    if (FirebaseService.isInitialized) {
-      _fetchSpecialties();
-      _checkLocationPermission();
-      _subscribeToUpdates();
-    } else {
-      print('Firebase not initialized. Cannot fetch doctors.');
+    // Add a delay to ensure Firebase is initialized
+    Future.delayed(const Duration(seconds: 1), () {
+      if (FirebaseService.isInitialized) {
+        _fetchSpecialties();
+        _checkLocationPermission();
+        _subscribeToUpdates();
+      } else {
+        debugPrint('Firebase not initialized. Using offline mode.');
+        _isOfflineMode = true;
+        _setupOfflineData();
+      }
+    });
+  }
+
+  void _setupOfflineData() {
+    try {
+      _doctors = OfflineService.getMockDoctors();
+      _specialties = OfflineService.getMockSpecialties();
+      _filterDoctors();
+      _setLoading(false);
+    } catch (e) {
+      debugPrint('Error loading offline data: $e');
       _setLoading(false);
     }
   }
@@ -179,7 +198,15 @@ class DoctorProvider extends ChangeNotifier {
 
   Future<DoctorModel?> getDoctor(String doctorId) async {
     try {
-      return await FirestoreService.getDoctor(doctorId);
+      if (!_isOfflineMode) {
+        return await FirestoreService.getDoctor(doctorId);
+      } else {
+        // Return from offline data
+        return _doctors.firstWhere(
+              (doctor) => doctor.id == doctorId,
+          orElse: () => throw Exception('Doctor not found'),
+        );
+      }
     } catch (e) {
       debugPrint('Error getting doctor: $e');
       return null;

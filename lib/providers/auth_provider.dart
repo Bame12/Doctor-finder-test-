@@ -1,3 +1,4 @@
+// lib/providers/auth_provider.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:doctor_finder_flutter/models/user_model.dart';
@@ -19,12 +20,15 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _initialize() {
-    // Check if Firebase is initialized before setting up listener
-    if (FirebaseService.isInitialized) {
-      _setupAuthListener();
-    } else {
-      print('Firebase not initialized. Auth state listener not set up.');
-    }
+    // Add a small delay to ensure Firebase is initialized
+    Future.delayed(const Duration(seconds: 1), () {
+      if (FirebaseService.isInitialized) {
+        _setupAuthListener();
+      } else {
+        print('Firebase not initialized. Auth state listener not set up.');
+        notifyListeners();
+      }
+    });
   }
 
   void _setupAuthListener() {
@@ -68,6 +72,12 @@ class AuthProvider extends ChangeNotifier {
     required String name,
     String? phone,
   }) async {
+    if (!FirebaseService.isInitialized) {
+      _error = 'Firebase not initialized. Cannot sign up.';
+      notifyListeners();
+      return false;
+    }
+
     try {
       _setLoading(true);
       _error = null;
@@ -94,6 +104,12 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
+    if (!FirebaseService.isInitialized) {
+      _error = 'Firebase not initialized. Cannot sign in.';
+      notifyListeners();
+      return false;
+    }
+
     try {
       _setLoading(true);
       _error = null;
@@ -115,6 +131,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    if (!FirebaseService.isInitialized) {
+      return;
+    }
+
     try {
       _setLoading(true);
       await AuthService.signOut();
@@ -127,6 +147,12 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> resetPassword(String email) async {
+    if (!FirebaseService.isInitialized) {
+      _error = 'Firebase not initialized. Cannot reset password.';
+      notifyListeners();
+      return false;
+    }
+
     try {
       _setLoading(true);
       _error = null;

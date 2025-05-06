@@ -52,37 +52,77 @@ class FirebaseService {
         defaultTargetPlatform == TargetPlatform.windows;
   }
 
-  // Auth
+  // Auth (with fallback)
   static FirebaseAuth get auth {
-    _checkInitialization();
+    if (!_initialized || _auth == null) {
+      throw Exception('Firebase not initialized');
+    }
     return _auth!;
   }
 
-  static User? get currentUser => auth.currentUser;
+  static User? get currentUser {
+    try {
+      return auth.currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
 
-  // Firestore
+  // Firestore (with fallback)
   static FirebaseFirestore get firestore {
-    _checkInitialization();
+    if (!_initialized || _firestore == null) {
+      throw Exception('Firebase not initialized');
+    }
     return _firestore!;
   }
 
-  // Collections
-  static CollectionReference get doctorsCollection => firestore.collection('doctors');
-  static CollectionReference get appointmentsCollection => firestore.collection('appointments');
-  static CollectionReference get reviewsCollection => firestore.collection('reviews');
-  static CollectionReference get specialtiesCollection => firestore.collection('specialties');
-  static CollectionReference get usersCollection => firestore.collection('users');
+  // Collections (with graceful error handling)
+  static CollectionReference get doctorsCollection {
+    try {
+      return firestore.collection('doctors');
+    } catch (e) {
+      throw Exception('Firebase not initialized');
+    }
+  }
+
+  static CollectionReference get appointmentsCollection {
+    try {
+      return firestore.collection('appointments');
+    } catch (e) {
+      throw Exception('Firebase not initialized');
+    }
+  }
+
+  static CollectionReference get reviewsCollection {
+    try {
+      return firestore.collection('reviews');
+    } catch (e) {
+      throw Exception('Firebase not initialized');
+    }
+  }
+
+  static CollectionReference get specialtiesCollection {
+    try {
+      return firestore.collection('specialties');
+    } catch (e) {
+      throw Exception('Firebase not initialized');
+    }
+  }
+
+  static CollectionReference get usersCollection {
+    try {
+      return firestore.collection('users');
+    } catch (e) {
+      throw Exception('Firebase not initialized');
+    }
+  }
 
   // Storage
   static FirebaseStorage get storage {
-    _checkInitialization();
-    return _storage!;
-  }
-
-  static void _checkInitialization() {
-    if (!_initialized || _auth == null || _firestore == null || _storage == null) {
-      throw Exception('Firebase not initialized. Call FirebaseService.initialize() first.');
+    if (!_initialized || _storage == null) {
+      throw Exception('Firebase not initialized');
     }
+    return _storage!;
   }
 
   // Helper method to check if Firebase is ready

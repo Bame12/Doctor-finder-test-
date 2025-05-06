@@ -1,3 +1,4 @@
+// lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +38,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
+              if (doctorProvider.isOfflineMode)
+                Container(
+                  width: double.infinity,
+                  color: Colors.orange.shade100,
+                  padding: const EdgeInsets.all(8),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.cloud_off, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text(
+                        'Running in offline mode',
+                        style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
               _buildSearchHeader(doctorProvider),
               _buildSpecialtyChips(doctorProvider),
               Expanded(

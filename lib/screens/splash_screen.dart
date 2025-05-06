@@ -1,3 +1,4 @@
+// lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -20,20 +21,23 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToNextScreen() async {
     try {
-      // Wait a bit for Firebase to initialize
-      await Future.delayed(const Duration(seconds: 3));
+      // Wait a bit more for Firebase to initialize
+      await Future.delayed(const Duration(seconds: 2));
 
       // Check if Firebase is initialized
       if (!FirebaseService.isInitialized) {
-        print('Firebase not initialized yet');
+        print('Firebase not initialized yet, continuing with limited features');
         if (mounted) {
-          context.go('/auth');
+          context.go('/home');  // Navigate to home as guest
         }
         return;
       }
 
       if (mounted) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+        // Give auth provider a moment to check status
+        await Future.delayed(const Duration(milliseconds: 500));
 
         if (authProvider.isLoggedIn) {
           context.go('/home');
@@ -44,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen> {
     } catch (e) {
       print('Error in splash navigation: $e');
       if (mounted) {
-        // Navigate to auth on error
-        context.go('/auth');
+        // Navigate to home on error
+        context.go('/home');
       }
     }
   }
@@ -89,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 100),
             const Text(
-              'Developed by: Your Name',
+              'Developed by: Bame Junior Noko',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white,
@@ -103,6 +107,15 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
               ),
             ),
+            const SizedBox(height: 20),
+            if (!FirebaseService.isInitialized)
+              const Text(
+                'Running in offline mode',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
           ],
         ),
       ),
